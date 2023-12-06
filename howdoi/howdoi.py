@@ -125,10 +125,16 @@ class BlockError(RuntimeError):
 
 
 class IntRange:
+
+# initalization function, arguments are assigned as parameters within the Class (as self)
+# both imin and imax default to None, don't need explicit integer value set
     def __init__(self, imin=None, imax=None):
         self.imin = imin
         self.imax = imax
 
+# call function for hte IntRange class, using 'imin' and 'imax' defined in the class Constructor
+# tries to convert imin and imax args into integers and throws valueError if it can't
+# either default value of None or the args are wihtin the imin, imax integer range... "outside defined range" if not
     def __call__(self, arg):
         try:
             value = int(arg)
@@ -136,8 +142,9 @@ class IntRange:
             raise self.exception() from value_error
         if (self.imin is not None and value < self.imin) or (self.imax is not None and value > self.imax):
             raise self.exception()
-        return value
+        return value #returns a validated integer within the defined range
 
+# building exceptions for when the args are in, out or not at all part ofthe integer argument range
     def exception(self):
         if self.imin is not None and self.imax is not None:
             return argparse.ArgumentTypeError(f'Must be an integer in the range [{self.imin}, {self.imax}]')
@@ -147,7 +154,9 @@ class IntRange:
             return argparse.ArgumentTypeError(f'Must be an integer <= {self.imax}')
         return argparse.ArgumentTypeError('Must be an integer')
 
-
+# generate random integer from the os module, number of bytes determined by 'width' parameter
+# checks Python versions (3 or less) to convert to an integers using 'encode(hex)' (encodes bytes as hexidecimal and converts the hex to an int)
+# returns an int
 def _random_int(width):
     bres = os.urandom(width)
     if sys.version < '3':
@@ -157,11 +166,11 @@ def _random_int(width):
 
     return ires
 
-
+# takes a sequence o-255 and selects random integer element from it
 def _random_choice(seq):
     return seq[_random_int(1) % len(seq)]
 
-
+# get proxies from 'urllib.request', retrieve a dictionary of available proxy servers and ensure they have the right format
 def get_proxies():
     proxies = getproxies()
     filtered_proxies = {}
