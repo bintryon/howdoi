@@ -134,7 +134,8 @@ class IntRange:
 
 # call function for hte IntRange class, using 'imin' and 'imax' defined in the class Constructor
 # tries to convert imin and imax args into integers and throws valueError if it can't
-# either default value of None or the args are wihtin the imin, imax integer range... "outside defined range" if not
+# either default value of None or the args are wihtin the imin, imax integer range... 
+# "outside defined range" if not
     def __call__(self, arg):
         try:
             value = int(arg)
@@ -155,7 +156,8 @@ class IntRange:
         return argparse.ArgumentTypeError('Must be an integer')
 
 # generate random integer from the os module, number of bytes determined by 'width' parameter
-# checks Python versions (3 or less) to convert to an integers using 'encode(hex)' (encodes bytes as hexidecimal and converts the hex to an int)
+# checks Python versions (3 or less) to convert to an integers using 'encode(hex)' 
+# (encodes bytes as hexidecimal and converts the hex to an int)
 # returns an int
 def _random_int(width):
     bres = os.urandom(width)
@@ -174,7 +176,8 @@ def _random_choice(seq):
 def get_proxies():
     proxies = getproxies()
     filtered_proxies = {}
-    for key, value in proxies.items():
+    # loop through proxies dictionary and .items() displays tuples of the key-value pairs
+    for key, value in proxies.items(): 
         if key.startswith('http'):
             if not value.startswith('http'):
                 filtered_proxies[key] = f'http://{value}'
@@ -182,7 +185,8 @@ def get_proxies():
                 filtered_proxies[key] = value
     return filtered_proxies
 
-
+# retrieves a dict response from a given url containing the proxy url, certificate presence, cookie consent status
+# sends http request using 'howdoi_session' specifiying useragent from the provided list
 def _get_result(url):
     try:
         resp = howdoi_session.get(url, headers={'User-Agent': _random_choice(USER_AGENTS)},
@@ -207,21 +211,25 @@ def _get_from_cache(cache_key):
     logging.getLogger().setLevel(current_log_level)
     return page
 
-
+# makes anchors hyperlinks
 def _add_links_to_text(element):
     hyperlinks = element.find('a')
 
+    # iterates through each anchor element found, then parses anchor element using 'pyqyery'
     for hyperlink in hyperlinks:
         pquery_object = pq(hyperlink)
         href = hyperlink.attrib['href']
         copy = pquery_object.text()
+        # checks if anchor text matches href link
         if copy == href:
+            # if anchor text matches href link, keep original text, if it differes, create Markdown-style hyperlink
             replacement = copy
         else:
             replacement = f'[{copy}]({href})'
+            # replaces anchor w generated Markdown-style hyperlink
         pquery_object.replace_with(replacement)
 
-
+# gets text element from the above pyquewry and returns links
 def get_text(element):
     ''' return inner text in pyquery element '''
     _add_links_to_text(element)
@@ -230,12 +238,14 @@ def get_text(element):
     except TypeError:
         return element.text()
 
-
+# Processes user input query through different search engines, extracting/scraping search result links,
+# and aggregating and formatting them for output.
+    # bing: extracts links from Bing, targeting specific elements
 def _extract_links_from_bing(html):
     html.remove_namespaces()
     return [a.attrib['href'] for a in html('.b_algo')('h2')('a')]
 
-
+# clean google search links by parsing query parameters for the main URL
 def _clean_google_link(link):
     if '/url?' in link:
         parsed_link = urlparse(link)
@@ -245,7 +255,7 @@ def _clean_google_link(link):
             return url_params[0]
     return link
 
-
+# extract links from google search results by parsing html response
 def _extract_links_from_google(query_object):
     html = query_object.html()
     link_pattern = re.compile(fr"https?://{URL}/questions/[0-9]*/[a-z0-9-]*")
@@ -253,7 +263,7 @@ def _extract_links_from_google(query_object):
     links = [_clean_google_link(link) for link in links]
     return links
 
-
+# extract links from duckduckgo based on spedific anchor elements
 def _extract_links_from_duckduckgo(html):
     html.remove_namespaces()
     links_anchors = html.find('a.result__a')
@@ -266,7 +276,7 @@ def _extract_links_from_duckduckgo(html):
             results.append(parsed_url[0])
     return results
 
-
+# DETERMINESsearch engine and calls respective link extracter
 def _extract_links(html, search_engine):
     if search_engine == 'bing':
         return _extract_links_from_bing(html)
@@ -274,11 +284,11 @@ def _extract_links(html, search_engine):
         return _extract_links_from_duckduckgo(html)
     return _extract_links_from_google(html)
 
-
+# retreives search url based on specified search engine, or defaults to google
 def _get_search_url(search_engine):
     return SEARCH_URLS.get(search_engine, SEARCH_URLS['google'])
 
-
+# indicator if page is blocked
 def _is_blocked(page):
     for indicator in BLOCK_INDICATORS:
         if page.find(indicator) != -1:
@@ -286,7 +296,10 @@ def _is_blocked(page):
 
     return False
 
-
+# gets links from search engine response based on the provided query
+# constructs search url and makes request to search engine, retreives response
+# parses html response, extracts links off specific methods
+# handles https errors, temporary blocks by search engines, 
 def _get_links(query):
     search_engine = os.getenv('HOWDOI_SEARCH_ENGINE', 'google')
     search_url = _get_search_url(search_engine).format(URL, url_quote(query))
@@ -310,7 +323,7 @@ def _get_links(query):
         logging.info(result)
     return list(dict.fromkeys(links))  # remove any duplicates
 
-
+# the specified link from its specific location in the list of links
 def get_link_at_pos(links, position):
     if not links:
         return False
@@ -321,6 +334,17 @@ def get_link_at_pos(links, position):
         link = links[-1]
     return link
 
+# formats output based on specified arguments and code input
+# highlights using StackOverflow's tags
+# lexer (lexical analyzer) breaks down code into useable tokens like keywords, identifiers, literals, operators, punctuation, etc
+# x = 10 + 5
+# The lexer would tokenize this code into separate tokens like:
+
+# Identifier: x
+# Assignment operator: =
+# Integer literal: 10
+# Addition operator: +
+# Integer literal: 5
 
 def _format_output(args, code):
     if not args['color']:
