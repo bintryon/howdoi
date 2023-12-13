@@ -390,7 +390,7 @@ def _get_answer(args, link):  # pylint: disable=too-many-branches
     cache_key = _get_cache_key(link)
     page = _get_from_cache(cache_key)
     if not page:
-        logging.info('Fetching page: %s', link)
+        logging.info('Fetching page: %s', link) #fetch link from page where answer was retreived
         page = _get_result(link + '?answertab=votes')
         cache.set(cache_key, page)
     else:
@@ -401,7 +401,7 @@ def _get_answer(args, link):  # pylint: disable=too-many-branches
     first_answer = html('.answercell').eq(0) or html('.answer').eq(0)
 
     instructions = first_answer.find('pre') or first_answer.find('code')
-    args['tags'] = [t.text for t in html('.post-tag')]
+    args['tags'] = [t.text for t in html('.post-tag')] #dict w args for the operation
 
     # make decision on answer body class.
     if first_answer.find(".js-post-body"):
@@ -432,7 +432,7 @@ def _get_answer(args, link):  # pylint: disable=too-many-branches
     text = text.strip()
     return text
 
-
+#
 def _get_links_with_cache(query):
     cache_key = _get_cache_key(query)
     res = _get_from_cache(cache_key)
