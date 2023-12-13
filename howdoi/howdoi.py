@@ -372,18 +372,20 @@ def _format_output(args, code):
         console.print(syntax)
     return capture.get()
 
-
+# handle incomplete search response url links, func checks if a given link 
+# qualifies via regex as a valid question
 def _is_question(link):
     for fragment in BLOCKED_QUESTION_FRAGMENTS:
         if fragment in link:
             return False
     return re.search(r'questions/\d+/', link)
 
-
+# comprehension gets questions if they're validated
 def _get_questions(links):
     return [link for link in links if _is_question(link)]
 
-
+# gets answer from cached pages; if not, gets page link and validates the 
+# by tags for a proper return
 def _get_answer(args, link):  # pylint: disable=too-many-branches
     cache_key = _get_cache_key(link)
     page = _get_from_cache(cache_key)
